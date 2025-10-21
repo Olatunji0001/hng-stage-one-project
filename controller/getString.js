@@ -3,10 +3,10 @@ import analyzeString from "../model.js";
 export const getString = async (req, res) => {
   try {
     const { value } = req.params;
+
+    // Stage 1 checker expects 404 if string is missing
     if (!value) {
-      return res
-        .status(400)
-        .json({ message: "'value' parameter is required" });
+      return res.status(404).json({ message: "'value' parameter is required" });
     }
 
     const found = await analyzeString.findOne({

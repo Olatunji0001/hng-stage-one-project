@@ -9,9 +9,9 @@ import { deleteString } from "./controller/delete.js";
 const router = express.Router();
 
 router.post("/strings", postString);
-router.get("/strings/:value", getString);
-router.get("/strings", filter);
 router.get("/strings/filter-by-natural-language", naturalFilter);
+router.get("/strings", filter);
+router.get("/strings/:value", getString);
 router.delete("/strings/:value", deleteString);
 
 

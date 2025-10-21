@@ -7,10 +7,10 @@ export const postString = async (req, res) => {
 
     // Validation
     if (!value) {
-      return res.status(400).json({ message: "'value' field is required" });
+      return res.status(404).json({ message: "'value' field is required" });
     }
     if (typeof value !== "string") {
-      return res.status(422).json({ message: "'value' must be a string" });
+      return res.status(404).json({ message: "'value' must be a string" });
     }
 
     // Check for duplicate

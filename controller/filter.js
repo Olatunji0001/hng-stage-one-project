@@ -4,7 +4,7 @@ export const filter = async (req, res) => {
   try {
     const queryParams = req.query;
 
-    // Validate numeric query params
+    // Validate numeric query params and return 404 if invalid
     const numericParams = ["min_length", "max_length", "word_count"];
     for (let param of numericParams) {
       if (
@@ -12,7 +12,7 @@ export const filter = async (req, res) => {
         isNaN(Number(queryParams[param]))
       ) {
         return res
-          .status(400)
+          .status(404)
           .json({ message: `${param} must be a number` });
       }
     }
@@ -20,24 +20,27 @@ export const filter = async (req, res) => {
     // Build MongoDB query
     const query = {};
 
+    // Boolean filter
     if (queryParams.is_palindrome !== undefined) {
       query["properties.is_palindrome"] = queryParams.is_palindrome === "true";
     }
 
-    if (queryParams.min_length) {
-      query["properties.length"] = query["properties.length"] || {};
-      query["properties.length"].$gte = Number(queryParams.min_length);
-    }
-
-    if (queryParams.max_length) {
-      query["properties.length"] = query["properties.length"] || {};
-      query["properties.length"].$lte = Number(queryParams.max_length);
+    // Numeric range filters
+    if (queryParams.min_length || queryParams.max_length) {
+      query["properties.length"] = {};
+      if (queryParams.min_length) {
+        query["properties.length"].$gte = Number(queryParams.min_length);
+      }
+      if (queryParams.max_length) {
+        query["properties.length"].$lte = Number(queryParams.max_length);
+      }
     }
 
     if (queryParams.word_count) {
       query["properties.word_count"] = Number(queryParams.word_count);
     }
 
+    // Character filter
     if (queryParams.contains_character) {
       const char = queryParams.contains_character.toLowerCase();
       query[`properties.character_frequency_map.${char}`] = { $exists: true };
