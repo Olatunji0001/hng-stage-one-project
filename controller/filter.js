@@ -17,22 +17,27 @@ export const filter = async (req, res) => {
       }
     }
 
-    // Build Mongo query
+    // Build MongoDB query
     const query = {};
+
     if (queryParams.is_palindrome !== undefined) {
       query["properties.is_palindrome"] = queryParams.is_palindrome === "true";
     }
+
     if (queryParams.min_length) {
       query["properties.length"] = query["properties.length"] || {};
       query["properties.length"].$gte = Number(queryParams.min_length);
     }
+
     if (queryParams.max_length) {
       query["properties.length"] = query["properties.length"] || {};
       query["properties.length"].$lte = Number(queryParams.max_length);
     }
+
     if (queryParams.word_count) {
       query["properties.word_count"] = Number(queryParams.word_count);
     }
+
     if (queryParams.contains_character) {
       const char = queryParams.contains_character.toLowerCase();
       query[`properties.character_frequency_map.${char}`] = { $exists: true };
