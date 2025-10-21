@@ -4,13 +4,12 @@ export const naturalFilter = async (req, res) => {
   try {
     const { query } = req.query;
     if (!query) {
-      return res.status(404).json({ message: "Query is required" });
+      return res.status(400).json({ message: "Query is required" });
     }
 
     const lowerQuery = query.toLowerCase();
     const filters = {};
 
-    // Detect simple filters
     if (lowerQuery.includes("palindrome") || lowerQuery.includes("palindromic")) {
       filters.is_palindrome = true;
     }
@@ -21,15 +20,14 @@ export const naturalFilter = async (req, res) => {
 
     const lengthMatch = lowerQuery.match(/longer than (\d+)/);
     if (lengthMatch) {
-      filters.minLength = parseInt(lengthMatch[1]);
+      filters.min_length = parseInt(lengthMatch[1]) + 1;
     }
 
     const charMatch = lowerQuery.match(/letter (\w)/);
     if (charMatch) {
-      filters.containsCharacter = charMatch[1].toLowerCase();
+      filters.contains_character = charMatch[1].toLowerCase();
     }
 
-    // Build Mongo query
     const mongoQuery = {};
     if (filters.is_palindrome !== undefined) {
       mongoQuery["properties.is_palindrome"] = filters.is_palindrome;
@@ -37,11 +35,13 @@ export const naturalFilter = async (req, res) => {
     if (filters.word_count !== undefined) {
       mongoQuery["properties.word_count"] = filters.word_count;
     }
-    if (filters.minLength !== undefined) {
-      mongoQuery["properties.length"] = { $gte: filters.minLength };
+    if (filters.min_length !== undefined) {
+      mongoQuery["properties.length"] = { $gte: filters.min_length };
     }
-    if (filters.containsCharacter !== undefined) {
-      mongoQuery[`properties.character_frequency_map.${filters.containsCharacter}`] = { $exists: true };
+    if (filters.contains_character !== undefined) {
+      mongoQuery[
+        `properties.character_frequency_map.${filters.contains_character}`
+      ] = { $exists: true };
     }
 
     const results = await analyzeString.find(mongoQuery);
@@ -54,7 +54,6 @@ export const naturalFilter = async (req, res) => {
         parsed_filters: filters,
       },
     });
-
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

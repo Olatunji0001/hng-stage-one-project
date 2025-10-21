@@ -3,14 +3,14 @@ import crypto from "crypto";
 
 export const postString = async (req, res) => {
   try {
-    const { value } = req.body; // changed from input to value
+    const { value } = req.body;
 
     // Validation
     if (!value) {
-      return res.status(404).json({ message: "'value' field is required" });
+      return res.status(400).json({ message: "'value' field is required" });
     }
     if (typeof value !== "string") {
-      return res.status(404).json({ message: "'value' must be a string" });
+      return res.status(422).json({ message: "'value' must be a string" });
     }
 
     // Check for duplicate
@@ -21,10 +21,15 @@ export const postString = async (req, res) => {
 
     // Compute properties
     const length = value.length;
-    const is_palindrome = value.toLowerCase() === value.toLowerCase().split('').reverse().join('');
+    const is_palindrome =
+      value.toLowerCase() === value.toLowerCase().split("").reverse().join("");
     const unique_characters = [...new Set(value.toLowerCase())].length;
-    const word_count = value.trim() === "" ? 0 : value.trim().split(/\s+/).length;
-    const sha256_hash = crypto.createHash("sha256").update(value).digest("hex");
+    const word_count =
+      value.trim() === "" ? 0 : value.trim().split(/\s+/).length;
+    const sha256_hash = crypto
+      .createHash("sha256")
+      .update(value)
+      .digest("hex");
 
     const character_frequency_map = {};
     for (const char of value.toLowerCase()) {
@@ -46,12 +51,11 @@ export const postString = async (req, res) => {
     });
 
     return res.status(201).json({
-      id_SHA256: sha256_hash,
+      id: sha256_hash,
       value,
       properties: newInput.properties,
       created_at: newInput.created_at,
     });
-
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
