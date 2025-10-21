@@ -1,0 +1,20 @@
+import express from "express";
+import { postString } from "./controller/postString.js";
+import { getString } from "./controller/getString.js"
+import { filter } from "./controller/filter.js";
+import { naturalFilter } from "./controller/naturalFilter.js";
+import { deleteString } from "./controller/delete.js";
+
+
+const router = express.Router();
+
+router.post("/strings", postString);
+router.get("/strings/:identifier", getString);
+router.get("/strings", filter);
+router.get("/strings/filter-by-natural-language", naturalFilter);
+router.delete("/strings/:identifier", deleteString);
+
+
+
+
+export default router;
