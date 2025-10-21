@@ -2,53 +2,42 @@ import analyzeString from "../model.js";
 
 export const filter = async (req, res) => {
   try {
-    const search = req.query; // get all query parameters
+    const queryParams = req.query;
 
-    // If no filters provided
-    if (!Object.keys(search).length) {
-      return res.status(400).json({
-        message: "Please provide at least one filter",
-        errorMessage: "Bad request",
-      });
-    }
-
-    // Create an empty object to hold our search query
+    // Build query object
     let query = {};
 
-    // Check each filter and add to query if it exists
-    if (search.is_palindrome) {
-      // convert string "true" or "false" to boolean
-      query["properties.is_palindrome"] = search.is_palindrome === "true";
+    if (queryParams.is_palindrome !== undefined) {
+      query["properties.is_palindrome"] = queryParams.is_palindrome === "true";
     }
 
-    if (search.min_length) {
+    if (queryParams.minLength) {
       query["properties.length"] = query["properties.length"] || {};
-      query["properties.length"].$gte = Number(search.min_length);
+      query["properties.length"].$gte = Number(queryParams.minLength);
     }
 
-    if (search.max_length) {
+    if (queryParams.maxLength) {
       query["properties.length"] = query["properties.length"] || {};
-      query["properties.length"].$lte = Number(search.max_length);
+      query["properties.length"].$lte = Number(queryParams.maxLength);
     }
 
-    if (search.word_count) {
-      query["properties.word_count"] = Number(search.word_count);
+    if (queryParams.wordCount) {
+      query["properties.word_count"] = Number(queryParams.wordCount);
     }
 
-    if (search.contains_character) {
-      // checks if character exists in character_frequency_map
-      const char = search.contains_character.toLowerCase();
+    if (queryParams.containsCharacter) {
+      const char = queryParams.containsCharacter.toLowerCase();
       query[`properties.character_frequency_map.${char}`] = { $exists: true };
     }
 
-    // Fetch results from database
+    // Fetch from DB
     const results = await analyzeString.find(query);
 
-    // Return the filtered data
+    // Return results
     return res.status(200).json({
       data: results,
       count: results.length,
-      filters_applied: search,
+      filtersApplied: queryParams,
     });
 
   } catch (error) {

@@ -3,98 +3,51 @@ import crypto from "crypto";
 
 export const postString = async (req, res) => {
   try {
-    const { input } = req.body;
-
-    // Function to get the length of the string
-    function countLength(word) {
-      return word.length;
-    }
-
-    // Function to check if the string is a palindrome
-    function checkPalindrome(word) {
-      const lowercaseWord = word.toLowerCase();
-      let reversedWord = "";
-      for (let i = lowercaseWord.length - 1; i >= 0; i--) {
-        reversedWord += lowercaseWord[i];
-      }
-      return reversedWord === lowercaseWord;
-    }
-
-    // Function to count unique characters
-    function uniqueCount(word) {
-      const lowercaseWord = word.toLowerCase();
-      const uniqueArr = [];
-      for (let i = 0; i < lowercaseWord.length; i++) {
-        const char = lowercaseWord[i];
-        if (!uniqueArr.includes(char)) {
-          uniqueArr.push(char);
-        }
-      }
-      return uniqueArr.length;
-    }
-
-    // Function to count words
-    function wordCount(word) {
-      const trimmed = word.trim();
-      if (trimmed === "") return 0;
-      return trimmed.split(/\s+/).length;
-    }
+    const { value } = req.body; // changed from input to value
 
     // Validation
-    if (!input) {
-      return res.status(400).json({
-        message: "Please enter a string input",
-        errorMessage: "Bad Request",
-      });
+    if (!value) {
+      return res.status(404).json({ message: "'value' field is required" });
+    }
+    if (typeof value !== "string") {
+      return res.status(404).json({ message: "'value' must be a string" });
     }
 
-    if (typeof input !== "string") {
-      return res.status(422).json({
-        message: "Input should be a string, not a number",
-        errorMessage: "Unprocessable Entity",
-      });
-    }
-
-    // Check if input already exists
-    const existing = await analyzeString.findOne({ value: input });
+    // Check for duplicate
+    const existing = await analyzeString.findOne({ value });
     if (existing) {
-      return res.status(409).json({
-        message: "Input already exists",
-        errorMessage: "Conflict",
-      });
+      return res.status(409).json({ message: "Duplicate string" });
     }
 
     // Compute properties
-    const length = countLength(input);
-    const isPalindrome = checkPalindrome(input);
-    const uniqueCharacters = uniqueCount(input);
-    const words = wordCount(input);
-    const sha256Hash = crypto.createHash("sha256").update(input).digest("hex");
+    const length = value.length;
+    const is_palindrome = value.toLowerCase() === value.toLowerCase().split('').reverse().join('');
+    const unique_characters = [...new Set(value.toLowerCase())].length;
+    const word_count = value.trim() === "" ? 0 : value.trim().split(/\s+/).length;
+    const sha256_hash = crypto.createHash("sha256").update(value).digest("hex");
 
-    // Character frequency map
-    const characterFrequencyMap = {};
-    for (const char of input.toLowerCase()) {
-      characterFrequencyMap[char] = (characterFrequencyMap[char] || 0) + 1;
+    const character_frequency_map = {};
+    for (const char of value.toLowerCase()) {
+      character_frequency_map[char] = (character_frequency_map[char] || 0) + 1;
     }
 
-    // Save to database
+    // Save to DB
     const newInput = await analyzeString.create({
-      id_SHA256: sha256Hash,
-      value: input,
+      id_SHA256: sha256_hash,
+      value,
       properties: {
         length,
-        is_palindrome: isPalindrome,
-        unique_characters: uniqueCharacters,
-        word_count: words,
-        sha256_hash: sha256Hash,
-        character_frequency_map: characterFrequencyMap,
+        is_palindrome,
+        unique_characters,
+        word_count,
+        sha256_hash,
+        character_frequency_map,
       },
     });
 
-    // Return the complete object
     return res.status(201).json({
-      id_SHA256: sha256Hash,
-      value: input,
+      id_SHA256: sha256_hash,
+      value,
       properties: newInput.properties,
       created_at: newInput.created_at,
     });
